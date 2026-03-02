@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SupportLens</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #0d0f14;
+    --surface:  #13161d;
+    --surface2: #1a1e27;
+    --border:   #222633;
+    --text:     #dde1ec;
+    --muted:    #525a70;
+    --green:    #4fffb0;
+    --billing:  #4fc3f7;
+    --refund:   #ffd54f;
+    --account:  #ff7eb3;
+    --cancel:   #ff6b6b;
+    --general:  #a78bfa;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+  }
+
+  header {
+    padding: 16px 32px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 15px;
+    color: var(--green);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .live-dot {
+    width: 8px; height: 8px;
+    background: var(--green);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--green);
+    animation: blink 2s infinite;
+  }
+
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  .header-right {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  main {
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 32px;
+  }
+
+  .section-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+  /* STAT CARDS */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 180px repeat(5, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 18px;
+  }
+
+  .stat-card.total   { border-top-color: var(--green); }
+  .stat-card.billing { border-top-color: var(--billing); }
+  .stat-card.refund  { border-top-color: var(--refund); }
+  .stat-card.account { border-top-color: var(--account); }
+  .stat-card.cancel  { border-top-color: var(--cancel); }
+  .stat-card.general { border-top-color: var(--general); }
+
+  .stat-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .stat-number {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 30px;
+    font-weight: 600;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .stat-card.total .stat-number   { font-size: 36px; color: var(--green); }
+  .stat-card.billing .stat-number { color: var(--billing); }
+  .stat-card.refund .stat-number  { color: var(--refund); }
+  .stat-card.account .stat-number { color: var(--account); }
+  .stat-card.cancel .stat-number  { color: var(--cancel); }
+  .stat-card.general .stat-number { color: var(--general); }
+
+  .stat-sub { font-size: 12px; color: var(--muted); }
+
+  .avg-row {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 32px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .avg-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .avg-value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  .avg-bar-bg {
+    flex: 1;
+    height: 6px;
+    background: var(--surface2);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .avg-bar-fill {
+    height: 100%;
+    background: var(--green);
+    border-radius: 3px;
+    width: 0%;
+    transition: width 1s ease;
+  }
+
+  /* TABLE */
+  .table-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 32px;
+  }
+
+  .table-toolbar {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .filter-group { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .fbtn {
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .fbtn:hover { color: var(--text); background: var(--surface2); }
+  .fbtn.active { background: var(--surface2); color: var(--text); }
+
+  .fbtn.f-all.active     { border-color: var(--green);   color: var(--green); }
+  .fbtn.f-billing.active { border-color: var(--billing); color: var(--billing); }
+  .fbtn.f-refund.active  { border-color: var(--refund);  color: var(--refund); }
+  .fbtn.f-account.active { border-color: var(--account); color: var(--account); }
+  .fbtn.f-cancel.active  { border-color: var(--cancel);  color: var(--cancel); }
+  .fbtn.f-general.active { border-color: var(--general); color: var(--general); }
+
+  .row-count {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+
+  thead th {
+    padding: 11px 16px;
+    text-align: left;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--muted);
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    font-weight: 400;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background .12s;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover, tbody tr.open { background: var(--surface2); }
+
+  td {
+    padding: 13px 16px;
+    font-size: 13px;
+    color: var(--text);
+    vertical-align: middle;
+  }
+
+  .ts-cell {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .msg-cell {
+    color: #8a93a8;
+    max-width: 260px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .rt-cell {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    text-align: right;
+    white-space: nowrap;
+  }
+  .rt-fast   { color: #4fffb0; }
+  .rt-medium { color: #ffd54f; }
+  .rt-slow   { color: #ff6b6b; }
+
+  .chevron {
+    display: inline-block;
+    font-size: 10px;
+    color: var(--muted);
+    transition: transform .2s;
+    margin-right: 6px;
+  }
+  .open .chevron { transform: rotate(90deg); }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    white-space: nowrap;
+  }
+
+  .b-Billing          { background:rgba(79,195,247,.12);  color:var(--billing); border:1px solid rgba(79,195,247,.25); }
+  .b-Refund           { background:rgba(255,213,79,.12);  color:var(--refund);  border:1px solid rgba(255,213,79,.25); }
+  .b-AccountAccess    { background:rgba(255,126,179,.12); color:var(--account); border:1px solid rgba(255,126,179,.25); }
+  .b-Cancellation     { background:rgba(255,107,107,.12); color:var(--cancel);  border:1px solid rgba(255,107,107,.25); }
+  .b-GeneralInquiry   { background:rgba(167,139,250,.12); color:var(--general); border:1px solid rgba(167,139,250,.25); }
+
+  .expand-tr td {
+    padding: 0;
+    background: #0e1017;
+    border-bottom: 2px solid var(--border);
+  }
+
+  .expand-inner {
+    padding: 20px 20px 20px 44px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    animation: fadeSlide .2s ease;
+  }
+
+  @keyframes fadeSlide {
+    from { opacity:0; transform:translateY(-6px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  .expand-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px;
+  }
+
+  .expand-box-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .expand-box-text {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  /* CHATBOT */
+  .chat-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .chat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card-header {
+    padding: 13px 20px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-header .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 6px var(--green);
+    animation: blink 2s infinite;
+  }
+
+  .messages {
+    flex: 1;
+    height: 260px;
+    overflow-y: auto;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    scroll-behavior: smooth;
+  }
+
+  .messages::-webkit-scrollbar { width: 4px; }
+  .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .bubble {
+    max-width: 85%;
+    padding: 10px 13px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.5;
+    animation: fadeSlide .2s ease;
+  }
+
+  .bubble.user {
+    align-self: flex-end;
+    background: rgba(79,255,176,.1);
+    border: 1px solid rgba(79,255,176,.2);
+  }
+
+  .bubble.bot {
+    align-self: flex-start;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: #8a93a8;
+  }
+
+  .bubble.typing { font-style: italic; color: var(--muted); }
+
+  .chat-input-row {
+    display: flex;
+    border-top: 1px solid var(--border);
+  }
+
+  .chat-input {
+    flex: 1;
+    padding: 13px 16px;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    outline: none;
+  }
+
+  .chat-input::placeholder { color: var(--muted); }
+
+  .send-btn {
+    padding: 0 22px;
+    background: var(--green);
+    border: none;
+    color: #000;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .15s;
+    letter-spacing: 1px;
+  }
+
+  .send-btn:hover   { opacity: .85; }
+  .send-btn:disabled{ opacity: .4; cursor: not-allowed; }
+
+  .feed {
+    flex: 1;
+    height: 314px;
+    overflow-y: auto;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .feed::-webkit-scrollbar { width: 4px; }
+  .feed::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .feed-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 9px 12px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 10px;
+    align-items: center;
+    font-size: 12px;
+    animation: slideIn .25s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity:0; transform:translateX(12px); }
+    to   { opacity:1; transform:translateX(0); }
+  }
+
+  .feed-msg { color: #8a93a8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .feed-rt  { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--muted); white-space:nowrap; }
+
+  .toast {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    background: rgba(255,107,107,.15);
+    border: 1px solid rgba(255,107,107,.3);
+    color: #ff6b6b;
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    z-index: 1000;
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="live-dot"></div>
+    SupportLens
+  </div>
+  <div class="header-right" id="clock">—</div>
+</header>
+
+<main>
+
+  <!-- SECTION 1: AGGREGATE VIEW -->
+  <div class="section-title">01 — Aggregate View</div>
+
+  <div class="stats-grid" id="stats-grid"></div>
+
+  <div class="avg-row">
+    <div class="avg-label">Avg Response Time</div>
+    <div class="avg-value" id="avg-val">—</div>
+    <div class="avg-bar-bg"><div class="avg-bar-fill" id="avg-bar"></div></div>
+  </div>
+
+  <!-- CHATBOT -->
+  <div class="section-title">02 — Live Chatbot</div>
+  <div class="chat-wrapper">
+    <div class="chat-card">
+      <div class="card-header"><div class="dot"></div> Support Agent</div>
+      <div class="messages" id="messages">
+        <div class="bubble bot">Hi! How can I help you today?</div>
+      </div>
+      <div class="chat-input-row">
+        <input class="chat-input" id="chat-input"
+               placeholder="Type a message and press Enter…"
+               onkeydown="if(event.key==='Enter') sendMessage()">
+        <button class="send-btn" id="send-btn" onclick="sendMessage()">SEND →</button>
+      </div>
+    </div>
+
+    <div class="chat-card">
+      <div class="card-header">Recent Traces</div>
+      <div class="feed" id="feed"></div>
+    </div>
+  </div>
+
+  <!-- SECTION 2: TRACE LIST -->
+  <div class="section-title" style="margin-top:32px">03 — Trace List</div>
+
+  <div class="table-card">
+    <div class="table-toolbar">
+      <div class="filter-group">
+        <button class="fbtn f-all active"    onclick="setFilter('all')">All</button>
+        <button class="fbtn f-billing"       onclick="setFilter('Billing')">Billing</button>
+        <button class="fbtn f-refund"        onclick="setFilter('Refund')">Refund</button>
+        <button class="fbtn f-account"       onclick="setFilter('Account Access')">Account Access</button>
+        <button class="fbtn f-cancel"        onclick="setFilter('Cancellation')">Cancellation</button>
+        <button class="fbtn f-general"       onclick="setFilter('General Inquiry')">General Inquiry</button>
+      </div>
+      <div class="row-count" id="row-count">0 traces</div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:28px"></th>
+          <th>Timestamp</th>
+          <th>User Message</th>
+          <th>Bot Response</th>
+          <th>Category</th>
+          <th style="text-align:right">Response Time</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONFIG ───────────────────────────────────────────────────────────────────
+// Set this to your backend URL when ready
+const API_BASE = 'http://localhost:8000';
+
+// ── CATEGORIES ───────────────────────────────────────────────────────────────
+const CATS = [
+  { key: 'Billing',         cls: 'billing', badgeCls: 'b-Billing' },
+  { key: 'Refund',          cls: 'refund',  badgeCls: 'b-Refund' },
+  { key: 'Account Access',  cls: 'account', badgeCls: 'b-AccountAccess' },
+  { key: 'Cancellation',    cls: 'cancel',  badgeCls: 'b-Cancellation' },
+  { key: 'General Inquiry', cls: 'general', badgeCls: 'b-GeneralInquiry' },
+];
+
+function catMeta(key) {
+  return CATS.find(c => c.key === key) || { cls:'general', badgeCls:'b-GeneralInquiry' };
+}
+
+// ── SEED DATA ────────────────────────────────────────────────────────────────
+function ago(days, hrs) {
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  d.setHours(d.getHours() - hrs);
+  return d.toISOString();
+}
+
+const SEED = [
+  { id:'s1',  user_message:"What payment methods do you accept?",                    bot_response:"We accept Visa, Mastercard, Amex, and PayPal. All payments are secured via Stripe.",                                                                                category:"Billing",         created_at:ago(3,0),  response_time_ms:320 },
+  { id:'s2',  user_message:"I was charged twice for my subscription this month!",    bot_response:"I sincerely apologize for the duplicate charge. I've escalated this to billing (ref #BIL-2847). Refund arrives in 3–5 business days.",                              category:"Billing",         created_at:ago(3,1),  response_time_ms:890 },
+  { id:'s3',  user_message:"I want a refund for last month",                         bot_response:"Understood. I've submitted refund request #REF-1042. You'll receive confirmation by email and the credit within 5 business days.",                                   category:"Refund",          created_at:ago(3,2),  response_time_ms:760 },
+  { id:'s4',  user_message:"I never used the service, can I get my money back?",     bot_response:"Since you're within the 30-day window, you qualify for a full refund. I'll process it now — expect it in 3–5 business days.",                                       category:"Refund",          created_at:ago(3,3),  response_time_ms:640 },
+  { id:'s5',  user_message:"I can't log into my account",                            bot_response:"Let's get you back in. Try resetting your password via 'Forgot Password' on the login page. If that doesn't work, I can manually verify your identity.",             category:"Account Access",  created_at:ago(2,0),  response_time_ms:410 },
+  { id:'s6',  user_message:"My account is locked after too many failed attempts",    bot_response:"Your account was temporarily locked for security. I've sent a reset link to your email. It expires in 15 minutes. Let me know if you need another one.",            category:"Account Access",  created_at:ago(2,1),  response_time_ms:480 },
+  { id:'s7',  user_message:"My MFA code keeps saying it's invalid",                 bot_response:"Authenticator apps can drift out of sync. Try re-syncing your app's time, or use one of your backup codes. I can also temporarily disable MFA for account recovery.", category:"Account Access",  created_at:ago(2,2),  response_time_ms:530 },
+  { id:'s8',  user_message:"I want to cancel my subscription",                       bot_response:"I'm sorry to hear that! Before I proceed, could I ask what's driving your decision? We also have a pause option at 50% off for up to 3 months.",                     category:"Cancellation",    created_at:ago(2,3),  response_time_ms:620 },
+  { id:'s9',  user_message:"Please close my account immediately",                    bot_response:"I've noted your request. Account closures are processed within 24 hours. You'll receive a confirmation email. Is there anything that would change your mind?",        category:"Cancellation",    created_at:ago(1,0),  response_time_ms:570 },
+  { id:'s10', user_message:"How do I downgrade from Pro to Basic?",                  bot_response:"Go to Settings → Subscription → Change Plan and select Basic. The downgrade takes effect at the end of your current billing cycle.",                                category:"Cancellation",    created_at:ago(1,1),  response_time_ms:390 },
+  { id:'s11', user_message:"What features are included in the Pro plan?",            bot_response:"Pro includes unlimited projects, priority support, advanced analytics, API access, and up to 25 team seats. Want me to send a full comparison?",                     category:"General Inquiry", created_at:ago(1,2),  response_time_ms:300 },
+  { id:'s12', user_message:"Does the app work on mobile?",                           bot_response:"Yes! We have native iOS and Android apps available on the App Store and Google Play. The mobile app also supports offline read-only mode.",                           category:"General Inquiry", created_at:ago(1,3),  response_time_ms:280 },
+  { id:'s13', user_message:"How do I export my data?",                               bot_response:"Go to Settings → Data → Export. You can export as CSV or JSON. Large exports are emailed as a download link within 20 minutes.",                                    category:"General Inquiry", created_at:ago(0,5),  response_time_ms:340 },
+  { id:'s14', user_message:"How do I invite team members?",                          bot_response:"Go to Settings → Team → Invite Members. Enter their email and choose their role. They'll receive an invite link valid for 48 hours.",                                category:"General Inquiry", created_at:ago(0,6),  response_time_ms:310 },
+  { id:'s15', user_message:"Where can I find my invoices?",                          bot_response:"Your invoices are under Account Settings → Billing → Invoice History. You can download PDFs for any invoice going back 3 years.",                                   category:"Billing",         created_at:ago(0,7),  response_time_ms:290 },
+  { id:'s16', user_message:"I was charged after I already cancelled",                bot_response:"Charges after cancellation can occur if the request was made mid-cycle. I'll check your cancellation date and submit a refund request if applicable.",                category:"Refund",          created_at:ago(0,8),  response_time_ms:810 },
+  { id:'s17', user_message:"I disputed the charge with my bank, what happens now?",  bot_response:"A chargeback has been filed. Our payments team will submit evidence to your bank within 5 business days. It's often faster to resolve directly with us first.",     category:"Refund",          created_at:ago(0,9),  response_time_ms:920 },
+  { id:'s18', user_message:"My password reset email never arrived",                  bot_response:"Please check your spam folder first. If it's not there, I can resend it or verify the email address on your account. Which email did you use to sign up?",          category:"Account Access",  created_at:ago(0,10), response_time_ms:360 },
+  { id:'s19', user_message:"Can I switch from monthly to annual billing?",           bot_response:"Absolutely! Switching to annual saves you 20%. I can apply the change now — you'll receive a prorated credit for the unused days on your current cycle.",            category:"Billing",         created_at:ago(0,11), response_time_ms:420 },
+  { id:'s20', user_message:"Do you offer a free trial?",                             bot_response:"Yes — 14 days, full access, no credit card required. Click 'Start Free Trial' on our homepage. After 14 days you'll be prompted to choose a plan.",                  category:"General Inquiry", created_at:ago(0,12), response_time_ms:265 },
+];
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let traces       = [];
+let activeFilter = 'all';
+let expandedId   = null;
+let useLocal     = false;
+
+// ── API HELPERS ───────────────────────────────────────────────────────────────
+async function apiGet(path) {
+  const res = await fetch(API_BASE + path);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return res.json();
+}
+
+async function apiPost(path, body) {
+  const res = await fetch(API_BASE + path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return res.json();
+}
+
+// ── STATS ─────────────────────────────────────────────────────────────────────
+function renderStatsLocal() {
+  const total = traces.length;
+  const counts = {};
+  CATS.forEach(c => counts[c.key] = 0);
+  traces.forEach(t => { if (counts[t.category] !== undefined) counts[t.category]++; });
+  const avg = total ? Math.round(traces.reduce((a, t) => a + t.response_time_ms, 0) / total) : 0;
+
+  renderStatsUI(total, avg, Object.fromEntries(
+    CATS.map(c => [c.key, { count: counts[c.key], percentage: total ? +(counts[c.key]/total*100).toFixed(1) : 0 }])
+  ));
+}
+
+async function renderStatsApi() {
+  try {
+    const data = await apiGet('/analytics');
+    renderStatsUI(data.total_traces, data.average_response_time_ms, data.by_category);
+  } catch(e) {
+    renderStatsLocal();
+  }
+}
+
+function renderStatsUI(total, avg, byCategory) {
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat-card total">
+      <div class="stat-label">Total Traces</div>
+      <div class="stat-number">${total}</div>
+      <div class="stat-sub">all categories</div>
+    </div>
+    ${CATS.map(c => {
+      const d = byCategory[c.key] || { count: 0, percentage: 0 };
+      return `<div class="stat-card ${c.cls}">
+        <div class="stat-label">${c.key}</div>
+        <div class="stat-number">${d.count}</div>
+        <div class="stat-sub">${d.percentage}%</div>
+      </div>`;
+    }).join('')}
+  `;
+  document.getElementById('avg-val').textContent = avg + 'ms';
+  document.getElementById('avg-bar').style.width = Math.min(100, Math.round(avg / 2000 * 100)) + '%';
+}
+
+// ── TABLE ─────────────────────────────────────────────────────────────────────
+function setFilter(cat) {
+  activeFilter = cat;
+  expandedId = null;
+  document.querySelectorAll('.fbtn').forEach(b => b.classList.remove('active'));
+  const map = { 'all':'f-all','Billing':'f-billing','Refund':'f-refund','Account Access':'f-account','Cancellation':'f-cancel','General Inquiry':'f-general' };
+  document.querySelector('.fbtn.' + map[cat]).classList.add('active');
+  renderTable();
+}
+
+function renderTable() {
+  let list = activeFilter === 'all' ? [...traces] : traces.filter(t => t.category === activeFilter);
+  list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  document.getElementById('row-count').textContent = list.length + ' traces';
+
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+
+  list.forEach(t => {
+    const meta = catMeta(t.category);
+    const isOpen = expandedId === t.id;
+    const tr = document.createElement('tr');
+    if (isOpen) tr.classList.add('open');
+    tr.innerHTML = `
+      <td><span class="chevron">▶</span></td>
+      <td class="ts-cell">${fmtTs(t.created_at)}</td>
+      <td class="msg-cell">${esc(trunc(t.user_message, 55))}</td>
+      <td class="msg-cell">${esc(trunc(t.bot_response, 60))}</td>
+      <td><span class="badge ${meta.badgeCls}">${t.category}</span></td>
+      <td class="rt-cell ${rtCls(t.response_time_ms)}">${t.response_time_ms}ms</td>
+    `;
+    tr.onclick = () => { expandedId = expandedId === t.id ? null : t.id; renderTable(); };
+    tbody.appendChild(tr);
+
+    if (isOpen) {
+      const ex = document.createElement('tr');
+      ex.className = 'expand-tr';
+      ex.innerHTML = `<td colspan="6">
+        <div class="expand-inner">
+          <div class="expand-box">
+            <div class="expand-box-label">User Message</div>
+            <div class="expand-box-text">${esc(t.user_message)}</div>
+          </div>
+          <div class="expand-box">
+            <div class="expand-box-label">Bot Response</div>
+            <div class="expand-box-text">${esc(t.bot_response)}</div>
+          </div>
+        </div>
+      </td>`;
+      tbody.appendChild(ex);
+    }
+  });
+}
+
+// ── CHATBOT ───────────────────────────────────────────────────────────────────
+// Local fallback classifier (used when backend unreachable)
+const LOCAL_RULES = [
+  { k:['invoice','bill','charge','payment','subscription fee','price','cost'], bot:"I can help with that billing question. Could you share your account email so I can pull up the details?", cat:'Billing' },
+  { k:['refund','money back','return','credit','dispute','chargeback'],        bot:"I'll submit a refund request right away. Refunds typically take 3–5 business days to appear on your statement.", cat:'Refund' },
+  { k:['login','password','locked','mfa','sign in','access','two-factor'],    bot:"Let's sort out your account access. Please try the 'Forgot Password' link on the login page. If that doesn't work, I can verify your identity manually.", cat:'Account Access' },
+  { k:['cancel','cancellation','close account','downgrade','stop service'],   bot:"I understand. Before I proceed, may I ask what's driving your decision? We do offer a 3-month pause at 50% off as an alternative.", cat:'Cancellation' },
+];
+
+function localClassify(msg) {
+  const lower = msg.toLowerCase();
+  for (const r of LOCAL_RULES) {
+    if (r.k.some(k => lower.includes(k))) return { bot: r.bot, cat: r.cat };
+  }
+  return { bot: "Thanks for reaching out! I'd be happy to help. Could you give me a bit more detail so I can assist you properly?", cat: 'General Inquiry' };
+}
+
+function addBubble(text, role) {
+  const el = document.createElement('div');
+  el.className = 'bubble ' + role;
+  el.textContent = text;
+  const msgs = document.getElementById('messages');
+  msgs.appendChild(el);
+  msgs.scrollTop = 9999;
+  return el;
+}
+
+function addFeedItem(trace) {
+  const meta = catMeta(trace.category);
+  const div = document.createElement('div');
+  div.className = 'feed-item';
+  div.innerHTML = `
+    <span class="badge ${meta.badgeCls}">${trace.category}</span>
+    <span class="feed-msg">${esc(trunc(trace.user_message, 38))}</span>
+    <span class="feed-rt">${trace.response_time_ms}ms</span>
+  `;
+  const feed = document.getElementById('feed');
+  feed.insertBefore(div, feed.firstChild);
+}
+
+async function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const text  = input.value.trim();
+  if (!text) return;
+  input.value = '';
+
+  const btn = document.getElementById('send-btn');
+  btn.disabled = true;
+  addBubble(text, 'user');
+  const typing = addBubble('Thinking…', 'bot typing');
+  const t0 = Date.now();
+
+  if (useLocal) {
+    // offline / seed mode — simulate with local keyword rules
+    await sleep(500 + Math.random() * 500);
+    const { bot, cat } = localClassify(text);
+    const rt = Date.now() - t0;
+    typing.remove();
+    addBubble(bot, 'bot');
+    const trace = {
+      id: 'l' + Date.now(),
+      user_message: text,
+      bot_response: bot,
+      category: cat,
+      created_at: new Date().toISOString(),
+      response_time_ms: rt,
+    };
+    traces.unshift(trace);
+    addFeedItem(trace);
+    renderStatsLocal();
+    renderTable();
+    btn.disabled = false;
+    return;
+  }
+
+  // ── LIVE BACKEND PATH ─────────────────────────────────────────────────────
+  try {
+    // Step 1: POST /chat — LLM generates the bot reply
+    const chatRes = await apiPost('/chat', { user_message: text });
+    const rt = Date.now() - t0;
+
+    typing.remove();
+    addBubble(chatRes.bot_response, 'bot');
+
+    // Step 2: POST /traces — backend classifies via LLM and saves to DB
+    const saved = await apiPost('/traces', {
+      user_message:     text,
+      bot_response:     chatRes.bot_response,
+      response_time_ms: chatRes.response_time_ms,  // use backend-measured time
+    });
+
+    // Step 3: add to live feed immediately from the saved trace
+    addFeedItem(saved);
+
+    // Step 4: refresh table and stats from backend
+    traces = await apiGet('/traces');
+    renderStatsApi();
+    renderTable();
+
+  } catch(e) {
+    typing.remove();
+    addBubble('Sorry, something went wrong. Please try again.', 'bot');
+    showToast('Backend error: ' + e.message);
+  }
+
+  btn.disabled = false;
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function fmtTs(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US',{month:'short',day:'2-digit'}) + ' ' +
+         d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+}
+
+function trunc(s, n) { return s && s.length > n ? s.slice(0, n) + '…' : (s || ''); }
+
+function esc(s) {
+  return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function rtCls(ms) {
+  if (ms < 500) return 'rt-fast';
+  if (ms < 900) return 'rt-medium';
+  return 'rt-slow';
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 4000);
+}
+
+setInterval(() => {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleString('en-US',{weekday:'short',month:'short',day:'2-digit',
+      hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+}, 1000);
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+(async () => {
+  try {
+    traces = await apiGet('/traces');
+    renderStatsApi();
+  } catch(e) {
+    useLocal = true;
+    traces = [...SEED];
+    renderStatsLocal();
+  }
+  renderTable();
+  [...traces].sort((a,b) => new Date(b.created_at) - new Date(a.created_at))
+             .slice(0, 5).forEach(addFeedItem);
+})();
+</script>
+</body>
+</html>
