@@ -4,10 +4,11 @@
 
 1. Clone the repository
 2. Set up environment variables (copy .env.example to .env and add your LLM API key)
-3. Create virtual environment
-4. Install dependencies: `pip install -r requirements.txt`
-5. Run the application: `uvicorn main:app --reload --port 8000`
-6. Open `frontend/index.html` in your browser
+3. Create virtual environment `python3 -m venv venv`
+4. Activate environment `source venv/bin/activate`
+5. Install dependencies: `pip install -r requirements.txt`
+6. Run the application: `uvicorn main:app --reload --port 8000`
+7. Open `frontend/index.html` in your browser
 
 ## Setup Database
 
